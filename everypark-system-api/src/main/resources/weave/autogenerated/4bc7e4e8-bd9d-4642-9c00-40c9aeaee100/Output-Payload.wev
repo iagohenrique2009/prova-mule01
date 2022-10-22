@@ -1,0 +1,11 @@
+%dw 2.0
+
+type auto_4bc7e4e8_bd9d_4642_9c00_40c9aeaee100_Output_Payload = {
+  telefone: Number, 
+  cpf: Number, 
+  nome: String, 
+  email: String, 
+  carros?: Array<{    marca: String,     cor: String,     modelo: String,     _?: Any  }>, 
+  _?: Any
+}
+

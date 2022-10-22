@@ -1,0 +1,32 @@
+{
+  "sampleData": {
+    "3d34e7ed-6d14-438a-ac4a-33836af58aed": {
+      "payload": "sample_data/list_java.dwl"
+    },
+    "0d646e2d-007e-4193-9053-75c9c073486d": {
+      "payload": "sample_data/list_java_1.dwl"
+    },
+    "920ac2f4-3019-424a-9bc5-f38d38275eb5": {
+      "payload": "sample_data/list_java_2.dwl"
+    },
+    "e0a883cb-3e91-472c-a45f-a2afdef91c8b": {
+      "payload": "sample_data/list_java_3.dwl"
+    },
+    "0160a8bf-778a-42bf-a1cb-029bef566408": {
+      "payload": "sample_data/list_java_4.dwl"
+    },
+    "33fa6f67-b045-44f4-9712-a2592d8ecc49": {
+      "payload": "sample_data/list_java_5.dwl"
+    },
+    "4fbb60d8-aa46-400a-b11f-6a12b704bb35": {
+      "payload": "sample_data/list_java_6.dwl"
+    },
+    "ac1d7cac-8281-450b-972a-0d9b7e075ef0": {
+      "payload": "sample_data/list_java_7.dwl",
+      "vars-var2": "sample_data/list_java_9.dwl"
+    },
+    "cd4fa998-d7eb-4739-86b4-50a44adfebc7": {
+      "payload": "sample_data/list_java_10.dwl"
+    }
+  }
+}

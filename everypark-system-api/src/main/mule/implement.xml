@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="9a911e6e-da8f-4d8b-91ed-e0699ab90c78" >
+		<db:my-sql-connection host="us-cdbr-east-06.cleardb.net" port="3306" user="b32707993d7d54" password="fdd510c3" database="heroku_f6767ae9f93e959" />
+	</db:config>
+	<flow name="getClientes" doc:id="9e821303-47a2-4e53-8455-aaed45be1875" >
+		<db:select doc:name="selectTodosComFiltro" doc:id="74d58a0d-478e-458d-9fab-fbaa91183d17" config-ref="Database_Config">
+			<db:sql ><![CDATA[SELECT * FROM cliente
+WHERE(:email IS NULL OR email = :email)
+AND(:nome IS NULL OR nome = :nome)
+
+]]></db:sql>
+			<db:parameter-types >
+				<db:parameter-type key="nome" type="VARCHAR" />
+				<db:parameter-type key="email" type="VARCHAR" />
+			</db:parameter-types>
+			<db:input-parameters ><![CDATA[#[{
+	'nome': attributes.queryParams.nome,
+	'email': attributes.queryParams.email
+}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="clienteInfo" doc:id="2e1b412f-7cd9-4ce9-be54-2504ca49e3a2" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload map ( payload01 , indexOfPayload01 ) -> {
+	cpf: payload01.cpf,
+	nome: payload01.nome,
+	telefone: payload01.telefone default 0,
+	email: payload01.email default ""
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="getClientesByCpf" doc:id="9bdfa5ae-39d5-4698-9135-5a1bef94f85d" >
+		<db:select doc:name="selectCpf" doc:id="46a59778-0625-494d-9ba7-bd6be314a1af" config-ref="Database_Config" >
+			<db:sql ><![CDATA[SELECT * FROM cliente WHERE cpf = :cpf]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{'cpf' : attributes.uriParams.cpf}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="clienteInfo" doc:id="e0a883cb-3e91-472c-a45f-a2afdef91c8b" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload reduce(payload,accun={}) -> {
+	cpf: payload.cpf,
+	nome: payload.nome,
+	telefone: payload.telefone default 0,
+	email: payload.email default ""
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="postClientes" doc:id="6e5f6e2a-f591-4e45-b056-ebd03a106791" >
+		<db:insert doc:name="insertCliente" doc:id="aad3de2c-77fa-4387-8e74-a4db79ec1b63" config-ref="Database_Config">
+			<db:sql ><![CDATA[INSERT INTO cliente(cpf,nome,telefone,email) VALUES(:cpf,:nome,:telefone,:email)]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{'cpf' : payload.cpf,
+  'nome' : payload.nome,
+   'telefone': payload.telefone,
+   'email': payload.email
+}]]]></db:input-parameters>
+		</db:insert>
+		<set-payload value="Cliente cadastrado com sucesso!" doc:name="mensagemPOSTSucesso" doc:id="4bfbc895-0ef7-4e50-aa47-9ea188d3bd5a" />
+	</flow>
+	<flow name="getClientesByCpfCarros" doc:id="4bc7e4e8-bd9d-4642-9c00-40c9aeaee100" >
+		<db:select doc:name="selectCpf" doc:id="e20208cc-6395-4def-a0c2-af497dfc91d9" config-ref="Database_Config" target="clienteInfo">
+			<db:sql ><![CDATA[SELECT * FROM cliente WHERE cpf = :cpf
+]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{'cpf' : attributes.uriParams.cpf}]]]></db:input-parameters>
+		</db:select>
+		<db:select doc:name="selectCarro" doc:id="2b7f1837-16ad-4ab7-ae88-e7ba2a6fa88e" config-ref="Database_Config">
+			<db:sql><![CDATA[SELECT * FROM carro WHERE cpfProprietario = :cpf]]></db:sql>
+			<db:input-parameters><![CDATA[#[{'cpf':  attributes.uriParams.cpf}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="infoClienteCarro" doc:id="ac1d7cac-8281-450b-972a-0d9b7e075ef0" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+
+vars.clienteInfo map (clienteInfo, indexOfClienteInfo01) -> {
+	telefone: clienteInfo.telefone default 0,
+	cpf: clienteInfo.cpf,
+	nome: clienteInfo.nome,
+	email: clienteInfo.email default "",
+	carros: payload map ( payload01 , indexOfPayload01 ) -> {
+		marca: payload01.marca,
+		cor: payload01.cor,
+		modelo: payload01.modelo
+	}
+}]]></ee:set-payload>
+			</ee:message>
+			<ee:variables >
+			</ee:variables>
+		</ee:transform>
+	</flow>
+</mule>
